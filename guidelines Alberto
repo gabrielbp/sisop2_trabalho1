@@ -1,0 +1,7 @@
+-> Ideia: simular o "accept" do TCP no UDP -> usa o socket principal para receber a primeira comunicação (login), depois envia 
+para o cliente o socket particular dele que será escutado por uma thread separada.
+        -> Utilizar um daemon para o cliente receber o socket particular (numa porta disponível qualquer)
+-> Não é necessário se preocupar com a persistência do servidor, apenas do cliente; o cliente pode mudar de máquina, o servidor 
+não mudará de máquina (problemas no servidor são da parte 2 do trabalho)
+-> Indicar quando o datagrama é um comando para informar o servidor -> isso fica a nosso critério como implementar.
+-> Recomendação: Manter o código extra-modular, pois haverão muitas mudanças na parte 2 em funçes já existentes.
