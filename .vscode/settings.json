@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "filemonitoring.h": "c",
+        "threads.h": "c"
+    }
+}
