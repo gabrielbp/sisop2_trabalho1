@@ -1,3 +1,6 @@
+#ifndef THREADS
+#define THREADS
+
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -21,3 +24,5 @@ int createNewThread(void * (*start_routine)(void *), void * arg);
     Retorna 0 se executou com sucesso, -1 se houve um erro
 */
 int killThread(int threadIndex);
+
+#endif

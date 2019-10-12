@@ -1,8 +1,11 @@
+#ifndef FILEMONITORING
+#define FILEMONITORING
+
 #include <sys/inotify.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
-#include "threads.h"
+#include "../threads/threads.h"
 
 #define MAX_EVENT_MONITOR 2048
 #define NAME_LENGTH 32 //size of file name
@@ -42,3 +45,5 @@ int RemoveMonitor(int monitorDescriptor);
     Implementa o funcionamento principal de um monitor: um loop infinito que detecta modificações em algum diretório
 */
 void* MonitorMainLoop(void* monitor);
+
+#endif
