@@ -11,12 +11,31 @@ void* ReceivedDatagram(T_SocketMessageData msgData){
     printf("\nRecebi um datagrama!!!");
     printf("\n%s", msgData.message);
     SendAcknowledgeMessage(CONNECT_SOCKET, msgData.senderAddress, msgData.senderAddressLength);
-    if(strcmp(msgData.message, "QUIT\n") == 0){
+    char *cmd = strtok(msgData.message, " \n");
+    if(strcmp(cmd, "QUIT") == 0){
+        puts("Got a QUIT");
         int connectionIndex = FindConnection(msgData.senderAddress, DEBUG_USERNAME);
-        if(connectionIndex == -1){
-        } else {
+        if(connectionIndex != -1){
             DeleteConnection(connectionIndex);
         }
+    }
+    if(strcmp(cmd, "upload") == 0){
+        puts("Got an upload request");
+    }
+    if(strcmp(cmd, "download") == 0){
+        puts("Got a download request");
+    }
+    if(strcmp(cmd, "delete") == 0){
+        puts("Got a delete request");
+    }
+    if(strcmp(cmd, "list_server") == 0){
+        puts("Got a list server request");
+    }
+    if(strcmp(cmd, "list_client") == 0){
+        puts("Got a list client request");
+    }
+    if(strcmp(cmd, "get_sync_dir") == 0){
+        puts("Got a get sync dir request");
     }
 }
 

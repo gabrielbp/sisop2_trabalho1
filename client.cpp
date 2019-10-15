@@ -10,7 +10,9 @@ int main(int argc, char *argv[]){
     struct sockaddr_in serverAddress;
     struct sockaddr_in senderAddress;
     char buffer[SOCKET_BUFFER_LEN];
+    bool quit = false;
 
+    printf("%s, %s", argv[0], argv[1]);
     puts("\nConectando...");
 
     socketId = NewClientSocket();
@@ -18,25 +20,28 @@ int main(int argc, char *argv[]){
         printf("Erro ao criar o socket");
     }
 
-    int porta_servidor = Connect(HOST_NAME, DEBUG_USERNAME, socketId, SOCKET_DEBUG_PORT);
+    int porta_servidor = Connect(argv[1], argv[2], socketId, SOCKET_DEBUG_PORT);
     printf("\nConectado!");
 
-    if(GetServerAddress(HOST_NAME, porta_servidor, &serverAddress) == -1){
+    if(GetServerAddress(argv[1], porta_servidor, &serverAddress) == -1){
         printf("Erro ao achar o host");
     }
 
-    printf("\nEntre a mensagem a ser enviada: \n");
-    bzero(buffer, SOCKET_BUFFER_LEN); //apenas zera o buffer para evitar bugs
-    fgets(buffer,SOCKET_BUFFER_LEN-1, stdin);   //lê uma string do console
+    while(!quit)
+    {
+        printf("\nEntre a mensagem a ser enviada: \n");
+        bzero(buffer, SOCKET_BUFFER_LEN); //apenas zera o buffer para evitar bugs
+        fgets(buffer,SOCKET_BUFFER_LEN-1, stdin);   //lê uma string do console
 
+        T_SendMessageInSocketParameter sendMsgParam;
+        sendMsgParam.socketId = socketId;
+        bcopy(buffer, sendMsgParam.messageData.message, SOCKET_BUFFER_LEN);
+        sendMsgParam.messageData.message_length = SOCKET_BUFFER_LEN;
+        sendMsgParam.messageData.senderAddress = serverAddress;
+        sendMsgParam.messageData.senderAddressLength = sizeof(serverAddress);
 
-    T_SendMessageInSocketParameter sendMsgParam;
-    sendMsgParam.socketId = socketId;
-    bcopy(buffer, sendMsgParam.messageData.message, SOCKET_BUFFER_LEN);
-    sendMsgParam.messageData.message_length = SOCKET_BUFFER_LEN;
-    sendMsgParam.messageData.senderAddress = serverAddress;
-    sendMsgParam.messageData.senderAddressLength = sizeof(serverAddress);
+        SendMessageInSocket((void*)&sendMsgParam);
 
-    SendMessageInSocket((void*)&sendMsgParam);
-    
+        sleep(1);
+    }
 }
