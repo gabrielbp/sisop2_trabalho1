@@ -5,8 +5,12 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <stdio.h>
-#include <strings.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <chrono>
+#include <fcntl.h>
+#include "../threads/threads.h"
 
 #define NUM_MAX_CONNECTIONS 256
 #define DEFAULT_OPTIONS 0
@@ -14,6 +18,20 @@
 #define TIMEOUT_SECONDS 5.0
 #define ACKNOWLEDGE_MSG "ACK"
 #define ACKNOWLEDGE_MSG_LEN 3
+#define ANY_PORT 0
+#define CONNECT_SOCKET -2
+
+/*
+    Estrutura de dados que representa um socket conectado a um dispositivo remoto
+*/
+typedef struct SocketConnection{
+    int isValid;                            //Valor booleano utilizado para identificar sockets que já foram excluídos
+    int socketId;                           //Identificador do socket vinculado a esta conexão
+    struct sockaddr_in connectionAddress;   //endereço de destino desta conexão
+    socklen_t connectionAddressLength;      //tamanho do endereço de destino
+    char* username;                         //nome do usuário vinculado a esta conexão
+    int threadId;                           //Identificador da thread correspondente a esta conexão
+} T_SocketConnection;
 
 /*
     Uma estrutura que contém os dados referentes a uma mensagem recebida/enviada no socket
@@ -44,23 +62,10 @@ typedef struct sendMessageInSocketParameter{
 } T_SendMessageInSocketParameter;
 
 /*
-    Dada uma porta, cria um novo socket de servidor vinculado a esta porta.
-    Retorna o identificador deste socket se executou com sucesso, -1 se houve um erro
-*/
-int NewServerSocket(int port);
-
-/*
     Cria um novo socket de cliente
     Retorna o identificador do socket se executou com sucesso ou -1 se houve algum erro
 */
 int NewClientSocket();
-
-/*
-    Dados um nome de host, uma porta e um buffer para a estrutura de endereço de socket,
-    preenche o buffer com as informações do servidor, se encontrar
-    Retorna 0 se executou com sucesso e -1 se houve algum erro
-*/
-int GetServerAddress(char *hostname, int port, struct sockaddr_in *serverAddress);
 
 
 /*
@@ -84,5 +89,39 @@ int SendAcknowledgeMessage(int socketId, struct sockaddr_in destinationAddress, 
     Se não receber até TIMEOUT_SECONDS segundos, reenvia a mensagem    
 */
 void* SendMessageInSocket(void* socketIdAndMessageData);
+
+/*
+    Dados o hostname, o nome de usuário, um identificador de socket inicializado e uma porta, executa o procedimento de conexão
+    com o servidor.
+    Retorna o número da porta que deverá ser usada pelas próximas requisições ao servidor se executou com sucesso
+    Se houve erro, retorna -1
+*/
+int Connect(char* hostname, char* username, int socketId, int port);
+
+/*
+    Dada a porta onde o socket de conexão rodará (que pode ser 0 se não faz diferença) e uma callback pra quando chegar
+    uma requisição, inicializa o servidor
+*/
+void StartServer(int port, void* (*_messageReceivedCallback)(T_SocketMessageData));
+
+/*
+    Dados um nome de host, uma porta e um buffer para a estrutura de endereço de socket,
+    preenche o buffer com as informações do servidor, se encontrar
+    Retorna 0 se executou com sucesso e -1 se houve algum erro
+*/
+int GetServerAddress(char *hostname, int port, struct sockaddr_in *serverAddress);
+
+/*
+    Dado o índice de uma conexão no array de conexões, fecha o socket e marca ela como inválida
+    Não tem retorno
+*/
+void DeleteConnection(int connectionIndex);
+
+/*
+    Dado um endereço de socket e um nome de usuário, percorre a lista de conexões checando se já existe uma conexão com este socket e este usuário
+    Se existir, retorna o índice desta conexão no array de conexões
+    Se não existir, retorna -1
+*/
+int FindConnection(struct sockaddr_in connectionAddress, char* username);
 
 #endif

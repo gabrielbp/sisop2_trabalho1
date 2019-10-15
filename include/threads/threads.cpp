@@ -15,6 +15,7 @@ int InitializeThreads(){
     }
 
     InitializeThreadArray();
+    isInitialized = 1;
     return 0;
 }
 
@@ -67,9 +68,9 @@ int killThread(int threadIndex){
         printf("[killThread]Erro: thread invalida");
         return -1;
     }
-
     /*mata a thread*/
-    int killStatus = pthread_kill(threadToBeKilled.thread, SIGKILL);
+    int killStatus = pthread_cancel(threadToBeKilled.thread);
+    pthread_join(threadToBeKilled.thread, NULL);
 
     if(killStatus == -1){
         printf("[killThread]Erro: nao foi possivel enviar sinal para thread");

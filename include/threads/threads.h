@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <signal.h> 
+#include <signal.h>
 
 #define MAX_ACTIVE_THREADS 256
 

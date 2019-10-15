@@ -1,38 +1,34 @@
 #include "include/sockets/sockets.h"
-#include "include/threads/threads.h"
-#include <unistd.h>
 
 #define SOCKET_DEBUG_PORT 4000
+#define DEBUG_USERNAME "usernameABC"
 
-int socketId;
 
+/*
+    Esta função é uma callback que é chamada sempre que chega um datagrama em algum socket
+*/
 void* ReceivedDatagram(T_SocketMessageData msgData){
-    
     printf("\nRecebi um datagrama!!!");
     printf("\n%s", msgData.message);
-    SendAcknowledgeMessage(socketId, msgData.senderAddress, msgData.senderAddressLength);
+    SendAcknowledgeMessage(CONNECT_SOCKET, msgData.senderAddress, msgData.senderAddressLength);
+    if(strcmp(msgData.message, "QUIT\n") == 0){
+        int connectionIndex = FindConnection(msgData.senderAddress, DEBUG_USERNAME);
+        if(connectionIndex == -1){
+        } else {
+            DeleteConnection(connectionIndex);
+        }
+    }
 }
 
 int main(int argc, char *argv[]){
-    
-    socklen_t fromlen;
-    struct sockaddr_in from;
-    char buffer[SOCKET_BUFFER_LEN];
-    int received_bytes;
-    int sent_bytes;
 
-    socketId = NewServerSocket(SOCKET_DEBUG_PORT);
-    if(socketId == -1){
-        printf("Erro criando socket");
+    /*Inicializa os dados do servidor e a thread de conexão
+    que fica lendo o socket de conexão esperando pelos clientes*/
+    StartServer(SOCKET_DEBUG_PORT, ReceivedDatagram);
+
+    while(1){
+        
     }
-
-    T_WaitForMessageInSocketParameter waitForMsgParam;
-    waitForMsgParam.socketId = socketId;
-    waitForMsgParam.messageReceivedCallback = ReceivedDatagram;
-
-    createNewThread(WaitForMessageInSocket, (void*)&waitForMsgParam);
-
-    while(1){  
-    }
-
 }
+
+

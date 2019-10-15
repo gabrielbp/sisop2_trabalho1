@@ -3,24 +3,29 @@
 #define SOCKET_BUFFER_LEN 1024
 #define SOCKET_DEBUG_PORT 4000
 #define HOST_NAME "localhost"
+#define DEBUG_USERNAME "usernameABC"
 
 int main(int argc, char *argv[]){
     int socketId;
     struct sockaddr_in serverAddress;
     struct sockaddr_in senderAddress;
-    socklen_t senderLength;
     char buffer[SOCKET_BUFFER_LEN];
+
+    puts("\nConectando...");
 
     socketId = NewClientSocket();
     if(socketId == -1){
         printf("Erro ao criar o socket");
     }
 
-    if(GetServerAddress(HOST_NAME, SOCKET_DEBUG_PORT, &serverAddress) == -1){
+    int porta_servidor = Connect(HOST_NAME, DEBUG_USERNAME, socketId, SOCKET_DEBUG_PORT);
+    printf("\nConectado!");
+
+    if(GetServerAddress(HOST_NAME, porta_servidor, &serverAddress) == -1){
         printf("Erro ao achar o host");
     }
 
-    printf("Entre a mensagem a ser enviada: \n");
+    printf("\nEntre a mensagem a ser enviada: \n");
     bzero(buffer, SOCKET_BUFFER_LEN); //apenas zera o buffer para evitar bugs
     fgets(buffer,SOCKET_BUFFER_LEN-1, stdin);   //lê uma string do console
 
@@ -33,5 +38,5 @@ int main(int argc, char *argv[]){
     sendMsgParam.messageData.senderAddressLength = sizeof(serverAddress);
 
     SendMessageInSocket((void*)&sendMsgParam);
-
+    
 }
