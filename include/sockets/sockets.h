@@ -11,15 +11,13 @@
 #include <chrono>
 #include <fcntl.h>
 #include "../threads/threads.h"
+#include "packageModels.hpp"
 
 #define NUM_MAX_CONNECTIONS 256
 #define DEFAULT_OPTIONS 0
 #define SOCKET_BUFFER_LEN 1024
 #define TIMEOUT_SECONDS 5.0
-#define ACKNOWLEDGE_MSG "ACK"
-#define ACKNOWLEDGE_MSG_LEN 3
 #define ANY_PORT 0
-#define CONNECT_SOCKET -2
 
 /*
     Estrutura de dados que representa um socket conectado a um dispositivo remoto
@@ -37,10 +35,10 @@ typedef struct SocketConnection{
     Uma estrutura que contém os dados referentes a uma mensagem recebida/enviada no socket
 */
 typedef struct socketMessageData{
-    char message[SOCKET_BUFFER_LEN];    //a mensagem em si, em um buffer de tamanho SUCKET_BUFFER_LEN
-    int message_length;                 //o tamanho em bytes da mensagem
+    T_Message message;                   //a mensagem em si
     struct sockaddr_in senderAddress;   //o endereço do remetente
     socklen_t senderAddressLength;      //o tamanho da estrutura do endereço do remetente
+    int socketId;                       //socket no qual foi recebida a mensagem
 } T_SocketMessageData;
 
 
@@ -58,7 +56,7 @@ typedef struct waitForMessageInSocketParameter{
 */
 typedef struct sendMessageInSocketParameter{
     int socketId;
-    socketMessageData messageData;
+    T_SocketMessageData messageData;
 } T_SendMessageInSocketParameter;
 
 /*
@@ -82,27 +80,14 @@ void* WaitForMessageInSocket(void* socketIdAndCallback);
 */
 int SendAcknowledgeMessage(int socketId, struct sockaddr_in destinationAddress, socklen_t destinationAddressLength);
 
-/*
-    Rotina para envio de uma mensagem, baseada no sistema de ACKs do protocolo TCP
-    É dividida em 2 partes: o envio da mensagem e o recebimento do ACK que confirma que a mensagem foi recebida
-    Primeiro, a rotina envia a mensagem, então fica em busy waiting esperando receber o ACK
-    Se não receber até TIMEOUT_SECONDS segundos, reenvia a mensagem    
-*/
-void* SendMessageInSocket(void* socketIdAndMessageData);
 
 /*
-    Dados o hostname, o nome de usuário, um identificador de socket inicializado e uma porta, executa o procedimento de conexão
-    com o servidor.
+    Dados o hostname, o nome de usuário, um identificador de socket inicializado, uma porta e uma função callback, executa o procedimento de conexão
+    com o servidor e inicia uma thread que ficará lendo no socket.
     Retorna o número da porta que deverá ser usada pelas próximas requisições ao servidor se executou com sucesso
     Se houve erro, retorna -1
 */
-int Connect(char* hostname, char* username, int socketId, int port);
-
-/*
-    Dada a porta onde o socket de conexão rodará (que pode ser 0 se não faz diferença) e uma callback pra quando chegar
-    uma requisição, inicializa o servidor
-*/
-void StartServer(int port, void* (*_messageReceivedCallback)(T_SocketMessageData));
+int Connect(char* hostname, char* username, int socketId, int port, void* (*messageReceivedCallback)(T_SocketMessageData));
 
 /*
     Dados um nome de host, uma porta e um buffer para a estrutura de endereço de socket,
@@ -112,16 +97,15 @@ void StartServer(int port, void* (*_messageReceivedCallback)(T_SocketMessageData
 int GetServerAddress(char *hostname, int port, struct sockaddr_in *serverAddress);
 
 /*
-    Dado o índice de uma conexão no array de conexões, fecha o socket e marca ela como inválida
-    Não tem retorno
+    Dada uma porta, cria um novo socket de servidor vinculado a esta porta.
+    Retorna o identificador deste socket se executou com sucesso, -1 se houve um erro
 */
-void DeleteConnection(int connectionIndex);
+int NewServerSocket(int port);
 
 /*
-    Dado um endereço de socket e um nome de usuário, percorre a lista de conexões checando se já existe uma conexão com este socket e este usuário
-    Se existir, retorna o índice desta conexão no array de conexões
-    Se não existir, retorna -1
+    Dado um identificador de socket, retorna a estrutura referente ao endereço deste socket
+    ou -1 se houver algum erro
 */
-int FindConnection(struct sockaddr_in connectionAddress, char* username);
+struct sockaddr_in GetSocketAddress(int socketId);
 
 #endif
